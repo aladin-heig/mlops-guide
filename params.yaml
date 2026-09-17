@@ -1,0 +1,14 @@
+prepare:
+  seed: 5241
+  split: 0.2
+  image_size: [32, 32]
+  grayscale: True
+  batch_size: 32
+
+train:
+  seed: 5241
+  lr: 0.0001
+  epochs: 5
+  conv_size: 32
+  dense_size: 64
+  output_classes: 10
