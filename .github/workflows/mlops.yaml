@@ -19,7 +19,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.13'
-          active_environment: true
+          activate-environment: true
       - name: Install dependencies
         run: uv pip install -r requirements-freeze.txt
       - name: Login to Google Cloud
