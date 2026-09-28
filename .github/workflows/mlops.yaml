@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install dependencies
-        run: uv pip install --system -r requirements-freeze.txt
+        run: uv pip install -r requirements-freeze.txt
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v3
         with:
