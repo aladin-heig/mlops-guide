@@ -15,7 +15,6 @@ on:
 jobs:
   train-and-report:
     permissions: write-all
-  train:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
