@@ -13,19 +13,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  train-and-report:
+  train-report-and-publish:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
+      - name: Setup Python
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-          activate-environment: true
+          cache: pip
       - name: Install dependencies
-        run: uv pip install -r requirements-freeze.txt
+        run: pip install -r requirements-freeze.txt
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v3
         with:
@@ -49,11 +49,11 @@ jobs:
           echo "# Experiment Report (${{ github.sha }})" >> report.md
 
           # Compare parameters to main branch
-          echo "## Params workspace vs. main" >> report.md
+          echo "## Params workflow vs. main" >> report.md
           dvc params diff main --md >> report.md
 
           # Compare metrics to main branch
-          echo "## Metrics workspace vs. main" >> report.md
+          echo "## Metrics workflow vs. main" >> report.md
           dvc metrics diff main --md >> report.md
 
           # Compare plots (images) to main branch
@@ -85,3 +85,24 @@ jobs:
 
           # Publish the CML report
           cml comment update --target=pr --publish report.md
+      - name: Log in to the Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ secrets.GCP_CONTAINER_REGISTRY_HOST }}
+          username: _json_key
+          password: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+      - name: Import the BentoML model
+        if: github.ref == 'refs/heads/main'
+        run: bentoml models import model/celestial_bodies_classifier_model.bentomodel
+      - name: Build the BentoML model artifact
+        if: github.ref == 'refs/heads/main'
+        run: bentoml build src
+      - name: Containerize and publish the BentoML model artifact Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Containerize the Bento
+          bentoml containerize celestial_bodies_classifier:latest \
+            --image-tag ${{ secrets.GCP_CONTAINER_REGISTRY_HOST }}/celestial-bodies-classifier:latest \
+            --image-tag ${{ secrets.GCP_CONTAINER_REGISTRY_HOST }}/celestial-bodies-classifier:${{ github.sha }}
+          # Push the container to the Container Registry
+          docker push --all-tags ${{ secrets.GCP_CONTAINER_REGISTRY_HOST }}/celestial-bodies-classifier
