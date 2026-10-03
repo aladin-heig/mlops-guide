@@ -1,11 +1,14 @@
+import json
 import sys
 from pathlib import Path
 from typing import Tuple
 
+import bentoml
 import keras
 import numpy as np
 import tensorflow as tf
 import yaml
+from PIL.Image import Image
 
 from utils.seed import set_seed
 
@@ -65,6 +68,9 @@ def main() -> None:
     )
     ds_val = tf.data.Dataset.load(str(prepared_dataset_folder / "val"))
 
+    with open(prepared_dataset_folder / "labels.json") as f:
+        labels = json.load(f)
+
     # Define the model
     model = get_model(image_shape, conv_size, dense_size, output_classes)
     model.compile(
@@ -83,8 +89,44 @@ def main() -> None:
 
     # Save the model
     model_folder.mkdir(parents=True, exist_ok=True)
-    model_path = model_folder.absolute() / "model.keras"
-    model.save(model_path)
+
+    def preprocess(x: Image):
+        # convert PIL image to tensor
+        x = x.convert("L" if grayscale else "RGB")
+        x = x.resize(image_size)
+        x = np.array(x, dtype=np.float32) / 255.0
+        # add channel dimension for grayscale
+        if x.ndim == 2:
+            x = np.expand_dims(x, axis=-1)
+        # add batch dimension
+        x = np.expand_dims(x, axis=0)
+        return x
+
+    def postprocess(x: Image):
+        return {
+            "prediction": labels[tf.argmax(x, axis=-1).numpy()[0]],
+            "probabilities": {
+                labels[i]: prob
+                for i, prob in enumerate(tf.nn.softmax(x).numpy()[0].tolist())
+            },
+        }
+
+    # Save the model using BentoML to its model store
+    bentoml.keras.save_model(
+        "celestial_bodies_classifier_model",
+        model,
+        include_optimizer=True,
+        custom_objects={
+            "preprocess": preprocess,
+            "postprocess": postprocess,
+        },
+    )
+
+    # Export the model from the model store to the local model folder
+    bentoml.models.export_model(
+        "celestial_bodies_classifier_model:latest",
+        f"{model_folder.absolute()}/celestial_bodies_classifier_model.bentomodel",
+    )
 
     # Save the model history
     np.save(model_folder.absolute() / "history.npy", model.history.history)

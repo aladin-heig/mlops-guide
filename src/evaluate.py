@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from typing import List
 
+import bentoml
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
@@ -103,9 +104,16 @@ def main() -> None:
     with open(prepared_dataset_folder / "labels.json") as f:
         labels = json.load(f)
 
+    # Import the model to the model store from a local model folder
+    try:
+        bentoml.models.import_model(
+            f"{model_folder.absolute()}/celestial_bodies_classifier_model.bentomodel"
+        )
+    except bentoml.exceptions.BentoMLException:
+        print("Model already exists in the model store - skipping import.")
+
     # Load model
-    model_path = model_folder.absolute() / "model.keras"
-    model = keras.models.load_model(model_path)
+    model = bentoml.keras.load_model("celestial_bodies_classifier_model")
     model_history = np.load(
         model_folder.absolute() / "history.npy", allow_pickle=True
     ).item()
