@@ -1,5 +1,6 @@
 # Data used to train the models
 data/raw/
+
 ## Python
 .venv/
 
@@ -8,6 +9,7 @@ __pycache__/
 
 ## Monitoring
 logs/
+monitoring/
 
 ## DVC
 

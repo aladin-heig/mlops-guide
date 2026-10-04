@@ -30,3 +30,13 @@ stages:
     - evaluation/plots/confusion_matrix.png
     - evaluation/plots/pred_preview.png
     - evaluation/plots/training_history.png
+  build_reference:
+    cmd: python3.13 src/build_reference.py data/prepared model 
+      data/reference_features.parquet
+    deps:
+    - data/prepared
+    - model
+    - src/build_reference.py
+    - src/features.py
+    outs:
+    - data/reference_features.parquet
