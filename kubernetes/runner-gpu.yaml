@@ -1,18 +1,27 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: github-runner
+  name: github-runner-gpu-${GITHUB_RUN_ID}
   labels:
-    app: github-runner
+    app: github-runner-gpu-${GITHUB_RUN_ID}
 spec:
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 4Gi
   imagePullSecrets:
     - name: ghcr-pull-secret
   containers:
-    - name: github-runner
+    - name: github-runner-gpu-${GITHUB_RUN_ID}
       image: ghcr.io/aladin-heig/mlops-guide/github-runner:latest
+      # We mount a shared memory volume for training
+      volumeMounts:
+        - name: dshm
+          mountPath: /dev/shm
       env:
         - name: GITHUB_RUNNER_LABEL
-          value: "base-runner"
+          value: "gpu-runner"
         - name: GITHUB_RUNNER_PAT
           valueFrom:
             secretKeyRef:
@@ -30,4 +39,4 @@ spec:
           cpu: "1"
           memory: "4Gi"
   nodeSelector:
-    gpu: "false"
+    gpu: "true"
