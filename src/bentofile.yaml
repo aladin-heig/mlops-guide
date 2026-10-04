@@ -1,6 +1,7 @@
 service: 'serve:CelestialBodiesClassifierService'
 include:
   - serve.py
+  - features.py
 python:
   packages:
     - "tensorflow==2.21.0"

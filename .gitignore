@@ -6,6 +6,9 @@ data/raw/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
+## Monitoring
+logs/
+
 ## DVC
 
 # DVC plots
