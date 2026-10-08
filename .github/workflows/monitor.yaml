@@ -10,6 +10,9 @@ on:
 jobs:
   drift-report:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -42,3 +45,15 @@ jobs:
           location: ${{ secrets.GCP_K8S_CLUSTER_ZONE }}
       - name: Restart Evidently UI
         run: kubectl rollout restart deployment/evidently-ui
+      - name: Ensure drift-alert label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create drift-alert \
+            --color ff0000 \
+            --description "Production drift alert" || true
+      - name: Check drift and open alert issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+        run: python src/drift_alert.py
