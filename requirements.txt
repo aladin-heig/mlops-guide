@@ -9,3 +9,4 @@ pillow==12.3.0
 evidently==0.7.23
 gcsfs==2026.6.0
 label-studio==1.23.0
+fastapi[standard]==0.139.2
