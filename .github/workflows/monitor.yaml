@@ -1,0 +1,44 @@
+name: Monitor drift
+
+on:
+  # Run every 24 hours
+  schedule:
+    - cron: "0 0 * * *"
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  drift-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements-freeze.txt
+      - name: Login to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}'
+      - name: Pull reference dataset
+        run: dvc pull data/reference_features.parquet
+      - name: Run drift report
+        env:
+          PYTHONPATH: src  # Let sync_monitoring.py import monitor.py
+          GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+        run: python src/sync_monitoring.py
+      - name: Upload drift reports
+        run: |
+          gcloud storage cp monitoring/report.html gs://${{ secrets.GCP_BUCKET_NAME }}/monitoring/report.html
+          gcloud storage cp monitoring/report.json gs://${{ secrets.GCP_BUCKET_NAME }}/monitoring/report.json
+      - name: Get Google Cloud's Kubernetes credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ secrets.GCP_K8S_CLUSTER_NAME }}
+          location: ${{ secrets.GCP_K8S_CLUSTER_ZONE }}
+      - name: Restart Evidently UI
+        run: kubectl rollout restart deployment/evidently-ui

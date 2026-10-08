@@ -14,6 +14,54 @@ spec:
       labels:
         app: celestial-bodies-classifier
     spec:
+      securityContext:
+        fsGroup: 2000
+      initContainers:
+      - name: init-log-dir
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - mkdir -p /home/bentoml/bento/logs/celestial_bodies_classifier && chgrp 2000 /home/bentoml/bento/logs/celestial_bodies_classifier && chmod 0775 /home/bentoml/bento/logs/celestial_bodies_classifier
+        volumeMounts:
+        - name: prediction-logs
+          mountPath: /home/bentoml/bento/logs
       containers:
       - name: celestial-bodies-classifier
         image: europe-west6-docker.pkg.dev/mlops-aladin-project/mlops-iseni-registry/celestial-bodies-classifier:latest
+        volumeMounts:
+        - name: prediction-logs
+          mountPath: /home/bentoml/bento/logs
+      - name: fluent-bit
+        image: fluent/fluent-bit:5.0.8
+        env:
+        - name: GCP_BUCKET_NAME
+          value: "mlops-aladin-bucket"
+        - name: GCP_BUCKET_LOCATION
+          value: "europe-west6"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: monitoring-gcs-credentials
+              key: gcs_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: monitoring-gcs-credentials
+              key: gcs_secret_access_key
+        volumeMounts:
+        - name: prediction-logs
+          mountPath: /home/bentoml/bento/logs
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        - name: fluent-bit-tmp
+          mountPath: /tmp/fluent-bit-s3
+      volumes:
+      - name: prediction-logs
+        emptyDir: {}
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      - name: fluent-bit-tmp
+        emptyDir: {}

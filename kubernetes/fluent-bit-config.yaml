@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        HTTP_Server   Off
+        Parsers_File  /fluent-bit/etc/parsers.conf
+
+    [INPUT]
+        Name              tail
+        Path              /home/bentoml/bento/logs/celestial_bodies_classifier/data/*.log
+        Tag               bentoml.logs
+        Parser            json
+        Refresh_Interval  5
+        Mem_Buf_Limit     50MB
+
+    [OUTPUT]
+        Name              s3
+        Match             bentoml.logs
+        bucket            ${GCP_BUCKET_NAME}
+        region            ${GCP_BUCKET_LOCATION}
+        endpoint          https://storage.googleapis.com
+        total_file_size   10M
+        upload_timeout    10m
+        s3_key_format     /logs/$TAG[0]/%Y/%m/%d/%H%M.log
+        store_dir         /tmp/fluent-bit-s3
+        send_content_md5  on
+        retry_limit       1
+  parsers.conf: |
+    [PARSER]
+        Name   json
+        Format json
+        Time_Key timestamp

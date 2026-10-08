@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evidently-ui
+  labels:
+    app: evidently-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evidently-ui
+  template:
+    metadata:
+      labels:
+        app: evidently-ui
+    spec:
+      imagePullSecrets:
+      - name: ghcr-pull-secret
+      containers:
+      - name: evidently-ui
+        image: ghcr.io/aladin-heig/mlops-guide/celestial-bodies-evidently-ui:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: GCP_BUCKET_NAME
+          value: "mlops-aladin-bucket"
