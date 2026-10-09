@@ -5,9 +5,9 @@ stages:
     deps:
     - path: data/raw
       hash: md5
-      md5: 648bf1fb9f622256f3f642e3e0927a24.dir
-      size: 9260297
-      nfiles: 1500
+      md5: af9fd12a49f28548b24377d89b597e22.dir
+      size: 9405911
+      nfiles: 1523
     - path: src/prepare.py
       hash: md5
       md5: ad24fb7c33a1746a143235fee5e341f8
@@ -29,16 +29,16 @@ stages:
     outs:
     - path: data/prepared
       hash: md5
-      md5: 8658703751159f33c6a1c1c4983831ba.dir
-      size: 6188058
+      md5: 2fa5f06e42a7ae828fb15139c9b37675.dir
+      size: 6277079
       nfiles: 8
   train:
     cmd: python3.13 src/train.py data/prepared model
     deps:
     - path: data/prepared
       hash: md5
-      md5: 8658703751159f33c6a1c1c4983831ba.dir
-      size: 6188058
+      md5: 2fa5f06e42a7ae828fb15139c9b37675.dir
+      size: 6277079
       nfiles: 8
     - path: src/train.py
       hash: md5
@@ -60,16 +60,16 @@ stages:
     outs:
     - path: model
       hash: md5
-      md5: 3f57a82cd3b5121cf298f231accdff18.dir
-      size: 7615263
+      md5: 2d41e30d18981912ce77cb2805daf682.dir
+      size: 7690371
       nfiles: 2
   evaluate:
     cmd: python3.13 src/evaluate.py model data/prepared
     deps:
     - path: model
       hash: md5
-      md5: 3f57a82cd3b5121cf298f231accdff18.dir
-      size: 7615263
+      md5: 2d41e30d18981912ce77cb2805daf682.dir
+      size: 7690371
       nfiles: 2
     - path: src/evaluate.py
       hash: md5
@@ -78,33 +78,33 @@ stages:
     outs:
     - path: evaluation/metrics.json
       hash: md5
-      md5: 10566e4fe38e7846bc552fe9af84730e
+      md5: cfd464d0b58df4e046a45c9d9c7692ba
       size: 159
     - path: evaluation/plots/confusion_matrix.png
       hash: md5
-      md5: 09d9b7d1199f51740d183cc4a748b76b
-      size: 55520
+      md5: c0e454d9ae854870d8755cfa4ae7da8c
+      size: 54305
     - path: evaluation/plots/pred_preview.png
       hash: md5
-      md5: c66a8655e226c1efc5dde5dfe7a9ec36
-      size: 49382
+      md5: d96c4e7f36a1e5bdb66b24ae6a3528c0
+      size: 51712
     - path: evaluation/plots/training_history.png
       hash: md5
-      md5: bf5d58edc9e92a9263ff2ccd24f6be33
-      size: 39622
+      md5: f1f5f88b7c6004d23fd5250aaf75e5fe
+      size: 41773
   build_reference:
     cmd: python3.13 src/build_reference.py data/prepared model 
       data/reference_features.parquet
     deps:
     - path: data/prepared
       hash: md5
-      md5: 8658703751159f33c6a1c1c4983831ba.dir
-      size: 6188058
+      md5: 2fa5f06e42a7ae828fb15139c9b37675.dir
+      size: 6277079
       nfiles: 8
     - path: model
       hash: md5
-      md5: 3f57a82cd3b5121cf298f231accdff18.dir
-      size: 7615263
+      md5: 2d41e30d18981912ce77cb2805daf682.dir
+      size: 7690371
       nfiles: 2
     - path: src/build_reference.py
       hash: md5
@@ -117,5 +117,5 @@ stages:
     outs:
     - path: data/reference_features.parquet
       hash: md5
-      md5: f6bdbcc83fb42f3a70152f90e02d1078
-      size: 460738
+      md5: 260b49c16f08f449c8553b614f7eda1f
+      size: 466569
