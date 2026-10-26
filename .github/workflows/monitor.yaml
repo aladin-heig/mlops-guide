@@ -2,8 +2,8 @@ name: Monitor drift
 
 on:
   # Run every 24 hours
-  schedule:
-    - cron: "0 0 * * *"
+  #schedule:
+    #- cron: "0 0 * * *"
   # Allow manual runs from the Actions tab
   workflow_dispatch:
 
